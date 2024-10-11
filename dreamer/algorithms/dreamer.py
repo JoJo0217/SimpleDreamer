@@ -90,6 +90,8 @@ class Dreamer:
 
             self.environment_interaction(env, self.config.num_interaction_episodes)
             self.evaluate(env)
+            if iteration % self.config.save_interval == 0:
+                self.save()
 
     def evaluate(self, env):
         self.environment_interaction(env, self.config.num_evaluate, train=False)
@@ -306,3 +308,13 @@ class Dreamer:
             print("evaluate score : ", evaluate_score)
             self.writer.add_scalar("test score", evaluate_score, self.num_total_episode)
             self.logger.log(self.train_step, evaluate_score=evaluate_score)
+
+    def save(self):
+        torch.save(self.encoder.state_dict(), "./encoder.pth")
+        torch.save(self.decoder.state_dict(), "./decoder.pth")
+        torch.save(self.rssm.state_dict(), "./rssm.pth")
+        torch.save(self.reward_predictor.state_dict(), "./reward_predictor.pth")
+        torch.save(self.actor.state_dict(), "./actor.pth")
+        torch.save(self.critic.state_dict(), "./critic.pth")
+        if self.config.use_continue_flag:
+            torch.save(self.continue_predictor.state_dict(), "./continue_predictor.pth")
