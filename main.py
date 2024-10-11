@@ -14,7 +14,7 @@ from dreamer.envs.envs import make_dmc_env, make_atari_env, get_env_infos
 
 def main(config_file):
     config = load_config(config_file)
-
+    
     if config.environment.benchmark == "atari":
         env = make_atari_env(
             task_name=config.environment.task_name,

@@ -37,7 +37,6 @@ def make_atari_env(task_name, skip_frame, width, height, seed, pixel_norm=True):
     env = SkipFrame(env, skip_frame)
     if pixel_norm:
         env = PixelNormalization(env)
-    env.seed(seed)
     return env
 
 

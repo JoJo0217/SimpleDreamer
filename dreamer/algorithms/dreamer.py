@@ -14,6 +14,7 @@ from dreamer.utils.utils import (
     DynamicInfos,
 )
 from dreamer.utils.buffer import ReplayBuffer
+from dreamer.utils.logger import Logger
 
 
 class Dreamer:
@@ -71,6 +72,9 @@ class Dreamer:
         self.writer = writer
         self.num_total_episode = 0
 
+        self.logger = Logger('./logs')
+        self.train_step = 0
+
     def train(self, env):
         if len(self.buffer) < 1:
             self.environment_interaction(env, self.config.seed_episodes)
@@ -82,6 +86,7 @@ class Dreamer:
                 )
                 posteriors, deterministics = self.dynamic_learning(data)
                 self.behavior_learning(posteriors, deterministics)
+                self.train_step += 1
 
             self.environment_interaction(env, self.config.num_interaction_episodes)
             self.evaluate(env)
@@ -171,6 +176,8 @@ class Dreamer:
             norm_type=self.config.grad_norm_type,
         )
         self.model_optimizer.step()
+        self.logger.log(self.train_step, model_loss=model_loss.item(), kl_loss=kl_divergence_loss.item(
+        ), reward_loss=-reward_loss.mean().item(), reconstruction_loss=-reconstruction_observation_loss.mean().item())
 
     def behavior_learning(self, states, deterministics):
         """
@@ -240,6 +247,7 @@ class Dreamer:
             norm_type=self.config.grad_norm_type,
         )
         self.critic_optimizer.step()
+        self.logger.log(self.train_step, actor_loss=actor_loss.item(), value_loss=value_loss.item())
 
     @torch.no_grad()
     def environment_interaction(self, env, num_interaction_episodes, train=True):
@@ -297,3 +305,4 @@ class Dreamer:
             evaluate_score = score_lst.mean()
             print("evaluate score : ", evaluate_score)
             self.writer.add_scalar("test score", evaluate_score, self.num_total_episode)
+            self.logger.log(self.train_step, evaluate_score=evaluate_score)

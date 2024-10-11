@@ -29,7 +29,9 @@ class SkipFrame(gym.Wrapper):
     def step(self, action):
         total_reward = 0.0
         for i in range(self._skip):
-            obs, reward, done, info = self.env.step(action)
+            output= self.env.step(action)
+            obs, reward, terminated, truncated, info = output
+            done = terminated or truncated
             total_reward += reward
             if done:
                 break
@@ -41,10 +43,13 @@ class PixelNormalization(gym.Wrapper):
         super().__init__(env)
 
     def _pixel_normalization(self, obs):
+        if len(obs)==2:
+            obs=obs[0]
         return obs / 255.0 - 0.5
 
     def step(self, action):
-        obs, reward, done, info = self.env.step(action)
+        output = self.env.step(action)
+        obs, reward, done, info = output
         return self._pixel_normalization(obs), reward, done, info
 
     def reset(self):
